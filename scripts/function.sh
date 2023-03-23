@@ -2041,6 +2041,17 @@ downloaded_library_sources() {
     exit 1
   fi
 
+  cd "${BASEDIR}"/src/ffmpeg 1>>"${BASEDIR}"/build.log 2>&1
+
+  # UNSHALLOW FFMPEG CLONE
+  git fetch --unshallow 1>>"${BASEDIR}"/build.log 2>&1
+
+  # REVERT THE COMMIT
+  git revert 301141b57636c4430e7440e8ff4956daf9cb0fb3 --no-edit 1>>"${BASEDIR}"/build.log 2>&1
+
+  # GO BACK TO ROOT
+  cd "${BASEDIR}" 1>>"${BASEDIR}"/build.log 2>&1
+
   for library in {1..50}; do
     if [[ ${!library} -eq 1 ]]; then
       library_name=$(get_library_name $((library - 1)))

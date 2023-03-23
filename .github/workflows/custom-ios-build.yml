@@ -1,0 +1,81 @@
+name: custom ios build
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag'
+        required: true
+        type: string
+
+jobs:
+  build-custom-ios-release:
+    name: build on monterey
+    runs-on: macos-12
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ inputs.tag }}
+      - name: detect lts version
+        run: |
+          if [[ "${{ inputs.tag }}" =~ "LTS" ]]; then
+            echo "LTS=true" >> $GITHUB_ENV
+            echo "FRAMEWORK=framework" >> $GITHUB_ENV
+          else
+            echo "LTS=false" >> $GITHUB_ENV
+            echo "FRAMEWORK=xcframework" >> $GITHUB_ENV
+          fi
+      - name: prerequisites
+        run: brew install autoconf automake libtool pkg-config curl git cmake gcc gperf texinfo yasm nasm bison autogen wget meson ninja ragel --overwrite
+      - name: run the build script for main full package
+        if: ${{ env.LTS == 'false' }}
+        run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh --xcframework --disable-armv7 --disable-armv7s --disable-i386 --disable-arm64e --enable-ios-audiotoolbox --enable-ios-avfoundation --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-videotoolbox --enable-ios-zlib --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-gmp --enable-gnutls --enable-kvazaar --enable-lame --enable-libass --enable-libilbc --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-zimg --enable-libxml2 --enable-opencore-amr --enable-opus --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-twolame --enable-vo-amrwbenc
+      - name: run the build script for lts full package
+        if: ${{ env.LTS == 'true' }}
+        run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh --disable-armv7s --disable-arm64e --disable-i386 --lts --enable-ios-audiotoolbox --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-zlib --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-gmp --enable-gnutls --enable-kvazaar --enable-lame --enable-libass --enable-libilbc --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-zimg --enable-libxml2 --enable-opencore-amr --enable-opus --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-twolame --enable-vo-amrwbenc
+      - name: print build logs
+        if: ${{ always() }}
+        run: cat build.log
+      - name: print ffbuild logs
+        if: ${{ failure() }}
+        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+      - name: create main full package
+        if: ${{ success() && env.LTS == 'false' }}
+        run: cd prebuilt;zip -r -y ffmpeg-kit-${{ inputs.tag }}-full-ios-${{ env.FRAMEWORK }}.zip bundle-apple-xcframework-ios/*;cd ..
+      - name: create lts full package
+        if: ${{ success() && env.LTS == 'true' }}
+        run: cd prebuilt;zip -r -y ffmpeg-kit-${{ inputs.tag }}-full-ios-${{ env.FRAMEWORK }}.zip bundle-apple-framework-ios-lts/*;cd ..
+      - name: run the build script for main full-gpl package
+        if: ${{ env.LTS == 'false' }}
+        run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh --xcframework --disable-armv7 --disable-armv7s --disable-i386 --disable-arm64e --enable-ios-audiotoolbox --enable-ios-avfoundation --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-videotoolbox --enable-ios-zlib --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-gmp --enable-gnutls --enable-kvazaar --enable-lame --enable-libass --enable-libilbc --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-zimg --enable-libxml2 --enable-opencore-amr --enable-opus --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-twolame --enable-vo-amrwbenc --enable-gpl --enable-libvidstab --enable-x264 --enable-x265 --enable-xvidcore
+      - name: run the build script for lts full-gpl package
+        if: ${{ env.LTS == 'true' }}
+        run: PATH="/usr/local/opt/bison/bin:$PATH" XML_CATALOG_FILES="/usr/local/etc/xml/catalog" ./ios.sh --disable-armv7s --disable-arm64e --disable-i386 --lts --enable-ios-audiotoolbox --enable-ios-bzip2 --enable-ios-libiconv --enable-ios-zlib --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-gmp --enable-gnutls --enable-kvazaar --enable-lame --enable-libass --enable-libilbc --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-zimg --enable-libxml2 --enable-opencore-amr --enable-opus --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-twolame --enable-vo-amrwbenc --enable-gpl --enable-libvidstab --enable-x264 --enable-x265 --enable-xvidcore
+      - name: print build logs
+        if: ${{ always() }}
+        run: cat build.log
+      - name: print ffbuild logs
+        if: ${{ failure() }}
+        run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
+      - name: create main full-gpl package
+        if: ${{ success() && env.LTS == 'false' }}
+        run: cd prebuilt;zip -r -y ffmpeg-kit-${{ inputs.tag }}-full-gpl-ios-${{ env.FRAMEWORK }}.zip bundle-apple-xcframework-ios/*;cd ..
+      - name: create lts full-gpl package
+        if: ${{ success() && env.LTS == 'true' }}
+        run: cd prebuilt;zip -r -y ffmpeg-kit-${{ inputs.tag }}-full-gpl-ios-${{ env.FRAMEWORK }}.zip bundle-apple-framework-ios-lts/*;cd ..
+      - name: Create Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ inputs.tag }}
+          name: Streamio FFmpeg-Kit ${{ inputs.tag }}
+          makeLatest: true
+          allowUpdates: true
+          omitBodyDuringUpdate: true
+          omitNameDuringUpdate: true
+          artifactErrorsFailBuild: true
+          artifacts: "prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-ios-${{ env.FRAMEWORK }}.zip,prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-gpl-ios-${{ env.FRAMEWORK }}.zip"
+          body: |
+            Streamio FFmpeg-Kit Release ${{ inputs.tag }}

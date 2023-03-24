@@ -1,4 +1,4 @@
-name: custom android build
+name: custom android build ndk21
 
 on:
   workflow_dispatch:

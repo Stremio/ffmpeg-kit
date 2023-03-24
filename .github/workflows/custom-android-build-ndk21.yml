@@ -80,7 +80,7 @@ jobs:
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ inputs.tag }}
-          name: Streamio FFmpeg-Kit ${{ inputs.tag }}
+          name: Stremio FFmpeg-Kit ${{ inputs.tag }}
           makeLatest: true
           allowUpdates: true
           omitBodyDuringUpdate: true
@@ -88,4 +88,4 @@ jobs:
           artifactErrorsFailBuild: true
           artifacts: "prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-android.aar,prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-gpl-android.aar"
           body: |
-            Streamio FFmpeg-Kit Release ${{ inputs.tag }}
+            Stremio FFmpeg-Kit Release ${{ inputs.tag }}

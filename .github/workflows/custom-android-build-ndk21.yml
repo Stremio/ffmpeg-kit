@@ -18,10 +18,10 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: ${{ inputs.tag }}
+          ref: ${{ env.TAG }}
       - name: detect lts version
         run: |
-          if [[ "${{ inputs.tag }}" =~ "LTS" ]]; then
+          if [[ $TAG =~ "LTS" ]]; then
             echo "LTS=true" >> $GITHUB_ENV
           else
             echo "LTS=false" >> $GITHUB_ENV
@@ -54,10 +54,10 @@ jobs:
         run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
       - name: create main full package
         if: ${{ success() && env.LTS == 'false' }}
-        run: cd prebuilt;cp bundle-android-aar/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ inputs.tag }}-full-android.aar;cd ..
+        run: cd prebuilt;cp bundle-android-aar/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ env.TAG }}-full-android.aar;cd ..
       - name: create lts full package
         if: ${{ success() && env.LTS == 'true' }}
-        run: cd prebuilt;cp bundle-android-aar-lts/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ inputs.tag }}-full-android.aar;cd ..
+        run: cd prebuilt;cp bundle-android-aar-lts/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ env.TAG }}-full-android.aar;cd ..
       - name: run the build script for main full-gpl package
         if: ${{ env.LTS == 'false' }}
         run: ./android.sh --disable-arm-v7a --enable-android-media-codec --enable-android-zlib --enable-dav1d --enable-fontconfig --enable-freetype --enable-fribidi --enable-gmp --enable-gnutls --enable-kvazaar --enable-lame --enable-libass --enable-libiconv --enable-libilbc --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libwebp --enable-zimg --enable-libxml2 --enable-opencore-amr --enable-opus --enable-shine --enable-snappy --enable-soxr --enable-speex --enable-twolame --enable-vo-amrwbenc --enable-gpl --enable-libvidstab --enable-x264 --enable-x265 --enable-xvidcore
@@ -72,20 +72,20 @@ jobs:
         run: '[[ -f ./src/ffmpeg/ffbuild/config.log ]] && tail -50 ./src/ffmpeg/ffbuild/config.log'
       - name: create main full-gpl package
         if: ${{ success() && env.LTS == 'false' }}
-        run: cd prebuilt;cp bundle-android-aar/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ inputs.tag }}-full-gpl-android.aar;cd ..;ls -l prebuilt
+        run: cd prebuilt;cp bundle-android-aar/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ env.TAG }}-full-gpl-android.aar;cd ..;ls -l prebuilt
       - name: create lts full-gpl package
         if: ${{ success() && env.LTS == 'true' }}
-        run: cd prebuilt;cp bundle-android-aar-lts/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ inputs.tag }}-full-gpl-android.aar;cd ..;ls -l prebuilt
+        run: cd prebuilt;cp bundle-android-aar-lts/ffmpeg-kit/ffmpeg-kit.aar ffmpeg-kit-${{ env.TAG }}-full-gpl-android.aar;cd ..;ls -l prebuilt
       - name: Create Release
         uses: ncipollo/release-action@v1
         with:
-          tag: ${{ inputs.tag }}
-          name: Stremio FFmpeg-Kit ${{ inputs.tag }}
+          tag: ${{ env.TAG }}
+          name: Stremio FFmpeg-Kit ${{ env.TAG }}
           makeLatest: true
           allowUpdates: true
           omitBodyDuringUpdate: true
           omitNameDuringUpdate: true
           artifactErrorsFailBuild: true
-          artifacts: "prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-android.aar,prebuilt/ffmpeg-kit-${{ inputs.tag }}-full-gpl-android.aar"
+          artifacts: "prebuilt/ffmpeg-kit-${{ env.TAG }}-full-android.aar,prebuilt/ffmpeg-kit-${{ env.TAG }}-full-gpl-android.aar"
           body: |
-            Stremio FFmpeg-Kit Release ${{ inputs.tag }}
+            Stremio FFmpeg-Kit Release ${{ env.TAG }}
